@@ -18,3 +18,4 @@ class EnvSettings:
         self.dbname = env.str("DB_NAME")
         self.browser = env.str("BROWSER")
         self.bot_token = env.str("BOT_TOKEN")
+        self.timer = env.int("TIMER")

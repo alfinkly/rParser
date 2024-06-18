@@ -95,3 +95,10 @@ class User(Base):
     phone_number: Mapped[str]
     created_at: Mapped[created_at_pk]
     updated_at: Mapped[updated_at_pk]
+
+
+class ProductMatch(Base):
+    __tablename__ = "product_match"
+
+    first_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
+    second_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)

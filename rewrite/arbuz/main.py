@@ -72,7 +72,6 @@ async def parse_arbuz(orm: ORM):
                 page_url = base_url_template.format(page_number)
 
                 driver.get(page_url)
-                print(page_url)
                 time.sleep(10)
 
                 driver.execute_script("window.location.reload();")
@@ -84,4 +83,4 @@ async def parse_arbuz(orm: ORM):
                 except TimeoutException:
                     continue
 
-        time.sleep(300)
+        time.sleep(orm.settings.timer)

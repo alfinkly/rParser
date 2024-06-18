@@ -24,5 +24,5 @@ async def contact_received(message: Message, state: FSMContext, orm: ORM):
     await message.answer("Спасибо за предоставленную информацию!")
 
     markup = await generate_category_markup(orm)
-    await message.answer("Выберите категорию:", reply_markup=markup)
+    await message.answer("Соответствия:", reply_markup=markup)
     await state.set_state(ProductSearch.choosing_category)

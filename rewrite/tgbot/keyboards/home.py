@@ -12,6 +12,6 @@ async def generate_category_markup(orm: ORM):
         count = sum(len(c.products) for c in gc.categories)
         button_text = f"{gc.name} ({count} Продуктов)"
         markup.inline_keyboard.append([
-            InlineKeyboardButton(text=button_text, callback_data=CategoryCallback(id=gc.id).pack())
+            InlineKeyboardButton(text=button_text, callback_data=CategoryCallback(action="g_category", id=gc.id).pack())
         ])
     return markup

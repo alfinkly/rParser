@@ -17,9 +17,7 @@ async def cmd_start(message: Message, state: FSMContext, orm: ORM):
 
     if existing_user:
         markup = await generate_category_markup(orm)
-        await message.answer("Вы уже поделились своим номером телефона. Выберите категорию:",
-                             reply_markup=markup)
-        # await ProductSearch.choosing_category.set()
+        await message.answer("Выберите категорию:", reply_markup=markup)
     else:
         keyboard = ReplyKeyboardMarkup(resize_keyboard=True,
                                        one_time_keyboard=True,

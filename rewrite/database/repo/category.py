@@ -1,7 +1,7 @@
 from sqlalchemy import select, insert
 from sqlalchemy.orm import selectinload
 
-from database.repo import Repo
+from database.repo.repo import Repo
 from database.models import Category, GeneralCategory
 
 

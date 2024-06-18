@@ -1,6 +1,6 @@
 from sqlalchemy import update, select
 
-from database.repo import Repo
+from database.repo.repo import Repo
 from database.models import Url, Product
 
 

@@ -17,10 +17,8 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 
 async def parse_clever(orm):
     while True:
-        print("Start parse")
         category_urls = await orm.url_repo.select_urls(1)
         for category_url in category_urls:
-            print(f"Category {category_url.url} parse")
             driver.get(category_url.url)
             time.sleep(10)
 
@@ -54,5 +52,4 @@ async def parse_clever(orm):
                 category.site_id = 1
                 product.category_id = await orm.category_repo.get_category_id(category)
                 await orm.product_repo.insert_or_update_product(product)
-        print(f"Start pause - {(seconds := 300)} sec")
-        time.sleep(seconds)
+        time.sleep(orm.settings.timer)

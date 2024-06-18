@@ -1,8 +1,9 @@
 from aiogram.types import Message
 from sqlalchemy import select, update
 
-from database.repo import Repo
+
 from database.models import User
+from database.repo.repo import Repo
 
 
 class UserRepo(Repo):
