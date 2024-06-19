@@ -19,3 +19,5 @@ class EnvSettings:
         self.browser = env.str("BROWSER")
         self.bot_token = env.str("BOT_TOKEN")
         self.timer = env.int("TIMER")
+        self.logging_level = env.int("LOGGING_LEVEL")
+        self.small_sleep = env.int("SMALL_SLEEP")

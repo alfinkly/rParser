@@ -1,5 +1,6 @@
-from sqlalchemy import update, select
+from typing import Any, Sequence
 
+from sqlalchemy import update, select, Row, RowMapping
 from database.repo.repo import Repo
 from database.models import Url, Product
 
@@ -15,7 +16,7 @@ class UrlRepo(Repo):
             await session.execute(query)
             await session.commit()
 
-    async def select_urls(self, site_id):
+    async def select_urls(self, site_id) -> Sequence | list[Url]:
         async with self.sessionmaker() as session:
             query = (
                 select(Url)
