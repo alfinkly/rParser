@@ -45,7 +45,7 @@ async def start():
             tasks.append(asyncio.create_task(arbuz_parser.parse()))
     if args.find_matches:
         product_matcher = ProductMatcher(orm)
-        tasks.append(asyncio.create_task(product_matcher.find_matches()))
+        tasks.append(asyncio.create_task(product_matcher.find_matches_products()))
 
     logging.info(f"{tasks=}")
     await asyncio.gather(*tasks)

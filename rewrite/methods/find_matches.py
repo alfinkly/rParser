@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from database.database import ORM
+from database.models import Product
 
 
 class ProductMatcher:
@@ -24,8 +25,8 @@ class ProductMatcher:
         return await self.orm.product_repo.select_site_products(site_id)
 
     @staticmethod
-    def products_to_df(products, site_id):
-        return pd.DataFrame([(p.id, p.name, site_id) for p in products], columns=['id', 'product', 'site_id'])
+    def products_to_df(products):
+        return pd.DataFrame([(p.id, p.name, ) for p in products], columns=['id', 'product', 'site_id'])
 
     def normalize_string(self, s):
         lemmatizer = WordNetLemmatizer()
@@ -61,21 +62,23 @@ class ProductMatcher:
                 product_y = merged_data.loc[merged_data['id'] == id_y, 'product'].values[0]
                 f.write(f"Product 1: {product_x} (ID: {id_x}) - Product 2: {product_y} (ID: {id_y})\n")
 
-    async def find_matches(self):
+    async def find_matches_products(self):
         while True:
-            products_1 = await self.fetch_products(1)
-            products_2 = await self.fetch_products(2)
-
-            df_site1 = self.products_to_df(products_1, 1)
-            df_site2 = self.products_to_df(products_2, 2)
-
-            merged_data = pd.concat([df_site1, df_site2])
+            # Получаем список всех продуктов из репозитория базы данных.
+            products: list[Product] = await self.orm.product_repo.select_all()
+            # Создаем DataFrame из списка продуктов, включая их идентификаторы, названия и идентификаторы сайтов.
+            df_site = pd.DataFrame([(p.id, p.name, p.category.site_id) for p in products],
+                                   columns=['id', 'product', 'site_id'])
+            # Объединяем данные в один DataFrame (в данном случае только один сайт).
+            merged_data = pd.concat([df_site])
+            # Пред обрабатываем продукты, нормализуя строки.
             merged_data = self.preprocess_products(merged_data)
-
+            # Находим сходства между продуктами на основе косинусного сходства.
             matches = self.find_similarities(merged_data)
+            # Создаем DataFrame с результатами совпадений.
             result = self.create_result_df(merged_data, matches)
-
+            # Сохраняем результаты совпадений в файл.
             self.save_matches_to_file(result, merged_data)
-
+            # Обновляем или вставляем данные о совпадениях в репозиторий базы данных.
             await self.orm.product_match_repo.insert_or_update_products_match(result)
             time.sleep(self.orm.settings.timer)
