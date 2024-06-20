@@ -1,3 +1,5 @@
+import os
+
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 
@@ -8,14 +10,14 @@ class Parser:
     def __init__(self, orm: ORM):
         self.orm = orm
         self.driver = self.initialize_driver()
-        self.wait = WebDriverWait(self.driver, 2000)
+        self.wait = WebDriverWait(self.driver, 10)
 
-    @staticmethod
-    def initialize_driver():
+    def initialize_driver(self):
         options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
         options.headless = True
-        return webdriver.Firefox(options=options)
+        service = webdriver.FirefoxService(executable_path=self.orm.settings.geckodriver_src)
+        return webdriver.Firefox(options=options, service=service)
 
     def parse(self):
         pass

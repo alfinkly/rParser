@@ -1,10 +1,13 @@
 import datetime
 import hashlib
+import logging
 import time
 
+from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from bs4 import BeautifulSoup
+from termcolor import colored
 
 from database.models import Url, Category, Product
 from parser.main import Parser
@@ -35,34 +38,28 @@ class KaspiParser(Parser):
             product.category_id = await self.orm.category_repo.get_category_id(category)
             await self.orm.product_repo.insert_or_update_product(product)
 
-    def _click_next_button(self):
-        next_button = self.wait.until(expected_conditions.element_to_be_clickable(
-            (By.XPATH, "//li[contains(@class, 'pagination__el') and contains(., 'Следующая')]")
-        ))
-        next_button.click()
-
     async def parse(self):
-        urls = await self.orm.url_repo.select_urls(3)
-        for url in urls:
-            self.driver.get(url.url)
-            last_successful_parse_time = datetime.datetime.now()
-            last_page_hash = self._get_html_hash()
+        logging.info(colored("kaspi parser started", "cyan"))
+        while True:
+            urls = await self.orm.url_repo.select_urls(3)
+            for url in urls:
+                counter = 1
+                while True:
+                    self.driver.get(url.url + f"?page={counter}")
+                    try:
+                        self.wait.until(
+                            expected_conditions.presence_of_all_elements_located((By.CLASS_NAME, 'item-card'))
+                        )
+                    except TimeoutException:
+                        break
+                    html = self.driver.page_source
+                    soup = BeautifulSoup(html, "html.parser")
+                    cards = soup.find_all('div', class_="item-card")
+                    category_name = soup.find('h1', class_="breadcrumbs__item").text.removesuffix("в Астане")
+                    # if not cards and (datetime.datetime.now() - last_successful_parse_time).seconds > 20:
+                    #     break
 
-            while True:
-                self.wait.until(expected_conditions.presence_of_all_elements_located((By.CLASS_NAME, 'item-card')))
-                html = self.driver.page_source
-                soup = BeautifulSoup(html, "html.parser")
-                cards = soup.find_all('div', class_="item-card")
-                category_name = soup.find('h1', class_="breadcrumbs__item").text.removesuffix("в Астане")
-                if not cards and (datetime.datetime.now() - last_successful_parse_time).seconds > 20:
-                    break
+                    await self._parse_cards(cards, category_name)
+                    counter += 1
 
-                await self._parse_cards(cards, category_name)
-                self._click_next_button()
-                time.sleep(5)
-                new_page_hash = self._get_html_hash()
-                if self._get_html_hash() == last_page_hash:
-                    break
-                last_page_hash = new_page_hash
-
-        time.sleep(self.orm.settings.timer)
+            time.sleep(self.orm.settings.timer)

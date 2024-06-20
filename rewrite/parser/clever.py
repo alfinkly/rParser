@@ -1,7 +1,10 @@
+import logging
+
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
+from termcolor import colored
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 from database.models import Product, Category
@@ -23,6 +26,7 @@ class CleverParser(Parser):
         await self.orm.product_repo.insert_or_update_product(product)
 
     async def parse(self):
+        logging.info(colored("clever parser started", "cyan"))
         while True:
             category_urls = await self.orm.url_repo.select_urls(1)
             for category_url in category_urls:

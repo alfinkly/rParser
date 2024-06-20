@@ -6,18 +6,18 @@ import coloredlogs as coloredlogs
 from pyfiglet import figlet_format
 from termcolor import colored
 from parser.arbuz import ArbuzParser
-from parser.clever import parse_clever, CleverParser
+from parser.clever import CleverParser
 from database.database import ORM
 from parser.kaspi import KaspiParser
 from methods.find_matches import ProductMatcher
 from tgbot.bot import run_tgbot
 
-print("\n"*2 + colored(figlet_format('by alfinkly', font='broadway', width=200), 'magenta') + "\n"*4)
+print("\n"*2 + colored(figlet_format('by alfinkly', font='thin', width=200), 'magenta') + "\n"*4)
 
 orm = ORM()
 logging.basicConfig(level=orm.settings.logging_level)
 coloredlogs.install()
-parser = argparse.ArgumentParser(description='SHOPARSER Использование различных парсеров и функций.')
+parser = argparse.ArgumentParser(description='shoparser by alfinkly')
 parser.add_argument('-t', '--tgbot', action="store_true", help='Запуск телеграм-бота')
 parser.add_argument('-p', '--parsers', nargs='+', type=str, help='Список парсеров (например, kaspi clever arbuz)')
 parser.add_argument('-r', '--recreate_db', action="store_true", help='Пересоздание базы данных')

@@ -1,7 +1,10 @@
+import logging
+
 from bs4 import BeautifulSoup
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
+from termcolor import colored
 
 from database.models import Product, Category
 from parser.main import Parser
@@ -32,6 +35,7 @@ class ArbuzParser(Parser):
             await self.orm.product_repo.insert_or_update_product(product)
 
     async def parse(self):
+        logging.info(colored("arbuz parser started", "cyan"))
         while True:
             category_urls = await self.orm.url_repo.select_urls(2)
             for url in category_urls:
@@ -39,7 +43,7 @@ class ArbuzParser(Parser):
                                               '%22value%22%3A{}%2C%22component%22%3A%22pagination%22%7D%5D'
                 page_url = base_url_template.format(1)
                 self.driver.get(page_url)
-                time.sleep(10)
+                time.sleep(self.orm.settings.small_sleep)
                 page_buttons = self.driver.\
                     find_elements(By.XPATH, '/html/body/div[1]/main/section/div/section/div[2]/div[6]/nav/ul/*')
                 category_name = self.driver.\
@@ -48,7 +52,7 @@ class ArbuzParser(Parser):
                 for page_number in range(1, int(page_buttons[-2].text) + 1):
                     page_url = base_url_template.format(page_number)
                     self.driver.get(page_url)
-                    time.sleep(10)
+                    time.sleep(self.orm.settings.small_sleep)
                     self.driver.execute_script("window.location.reload();")
                     self.wait.until(
                         expected_conditions.presence_of_all_elements_located((By.CSS_SELECTOR,
