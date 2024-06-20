@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, insert, update
 from sqlalchemy.orm import selectinload
 
 from database.repo.repo import Repo
@@ -13,9 +13,20 @@ class ProductRepo(Repo):
                 .filter_by(link=product.link)
             )
             result = await session.execute(query)
-            if result.one_or_none() is None:
+            db_product: Product | None = result.scalar()
+            if db_product is None:
                 session.add(product)
-                await session.commit()
+            elif product != db_product:
+                query = (
+                    update(Product)
+                    .values(name=product.name,
+                            link=product.link,
+                            price=product.price,
+                            image_url=product.image_url)
+                    .filter_by(link=db_product.link)
+                )
+                await session.execute(query)
+            await session.commit()
 
     async def select_all(self):
         async with self.sessionmaker() as session:

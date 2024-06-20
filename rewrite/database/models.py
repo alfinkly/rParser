@@ -47,6 +47,7 @@ class Product(Base):
     updated_at: Mapped[updated_at_pk]
 
     category: Mapped["Category"] = relationship("Category", back_populates="products")
+    sit
 
 
 class Category(Base):
