@@ -30,7 +30,7 @@ async def start():
     tasks = []
 
     if args.recreate_db:
-        tasks.append(asyncio.create_task(orm.recreate_tables()))
+        orm.recreate_tables()
     if args.tgbot:
         tasks.append(asyncio.create_task(run_tgbot(orm)))
     if args.parsers:
@@ -46,6 +46,7 @@ async def start():
     if args.find_matches:
         product_matcher = ProductMatcher(orm)
         tasks.append(asyncio.create_task(product_matcher.find_matches_products()))
+        # tasks.append(asyncio.create_task(product_matcher.loop_product_match()))
 
     logging.info(f"{tasks=}")
     await asyncio.gather(*tasks)

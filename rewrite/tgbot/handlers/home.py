@@ -7,17 +7,19 @@ from database.database import ORM
 from database.models import Category, GeneralCategory
 from tgbot.keyboards.callbacks import CategoryCallback
 from tgbot.keyboards.home import generate_category_markup
+from tgbot.keyboards.keyboards import Keyboard
 
 router = Router()
 
 
 @router.message(Command("start"))
-async def cmd_start(message: Message, state: FSMContext, orm: ORM):
+async def cmd_start(message: Message, state: FSMContext, orm: ORM, keyboard: Keyboard):
     existing_user = await orm.user_repo.find_user_by_tgid(message.from_user.id)
 
     if existing_user:
-        markup = await generate_category_markup(orm)
-        await message.answer("Выберите категорию:", reply_markup=markup)
+        markup = keyboard.home()
+        await message.answer("Привет Я бот для сравнения товаров из разных магазинов 👋🏻",
+                             reply_markup=markup)
     else:
         keyboard = ReplyKeyboardMarkup(resize_keyboard=True,
                                        one_time_keyboard=True,

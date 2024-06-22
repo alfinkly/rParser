@@ -4,6 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
 from database.database import ORM
+from tgbot.keyboards.keyboards import Keyboard
 
 
 class ORMMiddleware(BaseMiddleware):
@@ -17,5 +18,6 @@ class ORMMiddleware(BaseMiddleware):
         data: Dict[str, Any]
     ) -> Any:
         data["orm"] = self.orm
+        data["keyboard"] = Keyboard()
         result = await handler(event, data)
         return result

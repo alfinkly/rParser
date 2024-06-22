@@ -1,0 +1,2 @@
+insert into public.user (id, tg_id, fullname, username, phone_number, created_at, updated_at)
+values  (1, 992654384, 'Alimzhan', 'Deaspecty', '+77769986817', '2024-06-16 14:39:34.065068', '2024-06-16 14:39:34.065068');

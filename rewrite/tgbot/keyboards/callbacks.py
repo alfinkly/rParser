@@ -16,3 +16,7 @@ class ProductCallback(CallbackData, prefix="product"):
 
 class ProductMatchCallback(CallbackData, prefix="pm"):
     action: str
+
+
+class HomeCallback(CallbackData, prefix="home"):
+    action: str

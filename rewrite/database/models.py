@@ -4,7 +4,7 @@ from typing import Annotated
 from sqlalchemy import ForeignKey, text, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-intpk = Annotated[int, mapped_column(primary_key=True)]
+intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 created_at_pk = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 updated_at_pk = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"),
                                                   onupdate=text("TIMEZONE('utc', now())"))]
@@ -100,5 +100,7 @@ class User(Base):
 class ProductMatch(Base):
     __tablename__ = "product_match"
 
+    id: Mapped[intpk]
     first_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
     second_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
+    is_match: Mapped[bool] = mapped_column(nullable=True)

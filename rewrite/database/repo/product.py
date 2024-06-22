@@ -60,6 +60,18 @@ class ProductRepo(Repo):
             await session.close()
             return products
 
+    async def search_by_id(self, id: int):
+        async with self.sessionmaker() as session:
+            query = (
+                select(Product)
+                .filter(Product.id == id)
+                .options(selectinload(Product.category).selectinload(Category.site))
+            )
+            result = await session.execute(query)
+            products = result.unique().scalars().one()
+            await session.close()
+            return products
+
     async def search_by_category(self, id: int):
         async with self.sessionmaker() as session:
             query = (
@@ -86,9 +98,11 @@ class ProductMatchRepo(Repo):
             products_match = [(pm.first_product_id, pm.second_product_id) for pm in products_match]
             for id_x, id_y in unique_pairs:
                 if (id_x, id_y) not in products_match:
-                    product_match = ProductMatch(first_product_id=id_x, second_product_id=id_y)
-                    session.add(product_match)
-
+                    query = (
+                        insert(ProductMatch)
+                        .values(first_product_id=id_x, second_product_id=id_y)
+                    )
+                    await session.execute(query)
             await session.commit()
 
     async def select_all(self):
@@ -97,3 +111,13 @@ class ProductMatchRepo(Repo):
             result = await session.execute(query)
             products_match = result.scalars().all()
             return products_match
+
+    async def select_by_id(self, id: int):
+        async with self.sessionmaker() as session:
+            query = (
+                select(ProductMatch)
+                .filter_by(id=id)
+            )
+            result = await session.execute(query)
+            product_match = result.scalars().one()
+            return product_match

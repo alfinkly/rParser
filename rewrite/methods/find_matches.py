@@ -1,7 +1,7 @@
 import logging
 import time
 
-import nltk as nltk
+import nltk
 import numpy as np
 import pandas as pd
 from nltk import WordNetLemmatizer
@@ -26,7 +26,8 @@ class ProductMatcher:
 
     @staticmethod
     def products_to_df(products):
-        return pd.DataFrame([(p.id, p.name, ) for p in products], columns=['id', 'product', 'site_id'])
+        return pd.DataFrame([(p.id, p.name, p.category.site_id) for p in products],
+                            columns=['id', 'product', 'site_id'])
 
     def normalize_string(self, s):
         lemmatizer = WordNetLemmatizer()
@@ -47,11 +48,16 @@ class ProductMatcher:
 
     @staticmethod
     def create_result_df(merged_data, matches):
-        result = pd.DataFrame(matches, columns=['id_x', 'id_y'])
-        result = result[result['id_x'] != result['id_y']].drop_duplicates()
-        result['id_x'] = merged_data.iloc[result['id_x']]['id'].values
-        result['id_y'] = merged_data.iloc[result['id_y']]['id'].values
-        return result
+        result = pd.DataFrame(matches, columns=['idx_x', 'idx_y'])
+        result = result[result['idx_x'] != result['idx_y']].drop_duplicates()
+
+        result['id_x'] = result['idx_x'].apply(lambda x: merged_data.iloc[x]['id'])
+        result['id_y'] = result['idx_y'].apply(lambda x: merged_data.iloc[x]['id'])
+        result['site_id_x'] = result['idx_x'].apply(lambda x: merged_data.iloc[x]['site_id'])
+        result['site_id_y'] = result['idx_y'].apply(lambda x: merged_data.iloc[x]['site_id'])
+
+        result = result[result['site_id_x'] != result['site_id_y']]
+        return result[['id_x', 'id_y']]
 
     @staticmethod
     def save_matches_to_file(result, merged_data, file_path='matched_products.txt'):
@@ -63,22 +69,25 @@ class ProductMatcher:
                 f.write(f"Product 1: {product_x} (ID: {id_x}) - Product 2: {product_y} (ID: {id_y})\n")
 
     async def find_matches_products(self):
+        # Получаем список всех продуктов из репозитория базы данных.
+        products: list[Product] = await self.orm.product_repo.select_all()
+        # Создаем DataFrame из списка продуктов, включая их идентификаторы, названия и идентификаторы сайтов.
+        df_site = pd.DataFrame([(p.id, p.name, p.category.site_id) for p in products],
+                               columns=['id', 'product', 'site_id'])
+        # Объединяем данные в один DataFrame (в данном случае только один сайт).
+        merged_data = pd.concat([df_site])
+        # Пред обрабатываем продукты, нормализуя строки.
+        merged_data = self.preprocess_products(merged_data)
+        # Находим сходства между продуктами на основе косинусного сходства.
+        matches = self.find_similarities(merged_data)
+        # Создаем DataFrame с результатами совпадений.
+        result = self.create_result_df(merged_data, matches)
+        # Сохраняем результаты совпадений в файл.
+        self.save_matches_to_file(result, merged_data)
+        # Обновляем или вставляем данные о совпадениях в репозиторий базы данных.
+        await self.orm.product_match_repo.insert_or_update_products_match(result)
+
+    def loop_product_match(self):
         while True:
-            # Получаем список всех продуктов из репозитория базы данных.
-            products: list[Product] = await self.orm.product_repo.select_all()
-            # Создаем DataFrame из списка продуктов, включая их идентификаторы, названия и идентификаторы сайтов.
-            df_site = pd.DataFrame([(p.id, p.name, p.category.site_id) for p in products],
-                                   columns=['id', 'product', 'site_id'])
-            # Объединяем данные в один DataFrame (в данном случае только один сайт).
-            merged_data = pd.concat([df_site])
-            # Пред обрабатываем продукты, нормализуя строки.
-            merged_data = self.preprocess_products(merged_data)
-            # Находим сходства между продуктами на основе косинусного сходства.
-            matches = self.find_similarities(merged_data)
-            # Создаем DataFrame с результатами совпадений.
-            result = self.create_result_df(merged_data, matches)
-            # Сохраняем результаты совпадений в файл.
-            self.save_matches_to_file(result, merged_data)
-            # Обновляем или вставляем данные о совпадениях в репозиторий базы данных.
-            await self.orm.product_match_repo.insert_or_update_products_match(result)
+            self.find_matches_products()
             time.sleep(self.orm.settings.timer)
