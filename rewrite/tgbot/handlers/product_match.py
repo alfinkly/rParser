@@ -27,12 +27,12 @@ async def product_match_callback(callback: CallbackQuery, orm: ORM, state: FSMCo
     product1: Product = await orm.product_repo.search_by_id(products_match[0].first_product_id)
     product2: Product = await orm.product_repo.search_by_id(products_match[0].second_product_id)
 
-    text = f"Совпадение товаров 0/{len(products_match)}" \
+    text = f"Совпадение товаров 1/{len(products_match)}" \
            f"\n<b>{product1.name}</b>\nЦена: {product1.price}" \
-           f"\n<a href='{product1.link}'>Ссылка на товар в {product1.category.site.name}</a>\n"
-    text += f"↕️\n"
+           f"\n<a href='{product1.link}'>Ссылка на товар в {product1.category.site.name} </a>"
+    text += f"\n↕️\n"
     text += f"<b>{product2.name}</b>\nЦена: {product2.price}" \
-            f"\n<a href='{product2.link}'>Ссылка на товар в {product2.category.site.name}</a>"
+            f"\n<a href='{product2.link}'>Ссылка на товар в {product2.category.site.name} </a>"
     markup = keyboard.product_match()
 
     await state.update_data({"now_pm_id": 0, "max_id_pm": len(products_match) - 1})
@@ -65,7 +65,7 @@ async def product_button_callback(callback: CallbackQuery, callback_data: Produc
     product1: Product = await orm.product_repo.search_by_id(products_match[now_pm].first_product_id)
     product2: Product = await orm.product_repo.search_by_id(products_match[now_pm].second_product_id)
 
-    text = f"Совпадение товаров {now_pm}/{max_id_pm}" \
+    text = f"Совпадение товаров {now_pm + 1}/{max_id_pm + 1}" \
            f"\n<b>{product1.name}</b>\nЦена: {product1.price}" \
            f"\n<a href='{product1.link}'>Ссылка на товар в {product1.category.site.name}</a>\n"
     text += f"↕️\n"
@@ -103,9 +103,9 @@ async def product_previous_button_callback(callback: CallbackQuery, callback_dat
     product1: Product = await orm.product_repo.search_by_id(products_match[now_pm].first_product_id)
     product2: Product = await orm.product_repo.search_by_id(products_match[now_pm].second_product_id)
 
-    text = f"Совпадение товаров {now_pm}/{max_id_pm}" \
+    text = f"Совпадение товаров {now_pm + 1}/{max_id_pm + 1}" \
            f"\n<b>{product1.name}</b>\nЦена: {product1.price}" \
-           f"\n<a href='{product1.link}'>Ссылка на товар в {product1.category.site.name}<a/>\n"
+           f"\n<a href='{product1.link}'>Ссылка на товар в {product1.category.site.name}</a>\n"
     text += f"↕️\n"
     text += f"<b>{product2.name}</b>\nЦена: {product2.price}" \
             f"\n<a href='{product2.link}'>Ссылка на товар в {product2.category.site.name}</a>"
