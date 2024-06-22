@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from selenium import webdriver
@@ -28,6 +29,7 @@ class CleverParser(Parser):
     async def parse(self):
         logging.info(colored("clever parser started", "cyan"))
         while True:
+            start = datetime.datetime.now()
             category_urls = await self.orm.url_repo.select_urls(1)
             for category_url in category_urls:
                 self.driver.get(category_url.url)
@@ -49,5 +51,7 @@ class CleverParser(Parser):
                 product_cards = self.driver.find_elements(By.CLASS_NAME, 'product-card')
                 for card in product_cards:
                     await self.insert_product(card, category_name)
-
+            end = datetime.datetime.now()
+            delta = end - start
+            print("\n" * 20 + "clever delta --- " + str(delta))
             time.sleep(self.orm.settings.timer)

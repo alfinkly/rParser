@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from bs4 import BeautifulSoup
@@ -37,6 +38,7 @@ class ArbuzParser(Parser):
     async def parse(self):
         logging.info(colored("arbuz parser started", "cyan"))
         while True:
+            start = datetime.datetime.now()
             category_urls = await self.orm.url_repo.select_urls(2)
             for url in category_urls:
                 base_url_template = url.url + '#/?%5B%7B%22slug%22%3A%22page%22,' \
@@ -59,4 +61,7 @@ class ArbuzParser(Parser):
                                                                               'article.product-item.product-card'))
                     )
                     await self.parse_page(page_url, category_name)
+            end = datetime.datetime.now()
+            delta = end - start
+            print("\n"*20 + "arbuz delta --- " + str(delta))
             time.sleep(self.orm.settings.timer)

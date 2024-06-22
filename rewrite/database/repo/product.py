@@ -1,4 +1,4 @@
-from sqlalchemy import select, insert, update
+from sqlalchemy import select, insert, update, func
 from sqlalchemy.orm import selectinload
 
 from database.repo.repo import Repo
@@ -121,3 +121,50 @@ class ProductMatchRepo(Repo):
             result = await session.execute(query)
             product_match = result.scalars().one()
             return product_match
+
+    async def select_by_first_product_id(self, first_product_id: int):
+        async with self.sessionmaker() as session:
+            products = []
+            product_query = (
+                select(Product)
+                .filter_by(id=first_product_id)
+                .options(selectinload(Product.category).selectinload(Category.site))
+            )
+            result = await session.execute(product_query)
+            products.append(result.scalars().one())
+
+            query = (
+                select(ProductMatch)
+                .filter_by(first_product_id=first_product_id)
+            )
+            result = await session.execute(query)
+            second_products = result.scalars().all()
+
+            for p in second_products:
+                product2_query = (
+                    select(Product)
+                    .filter_by(id=p.second_product_id)
+                    .options(selectinload(Product.category).selectinload(Category.site))
+                )
+                result = await session.execute(product2_query)
+                products.append(result.scalars().one())
+            return products
+
+    async def count_unique_first_product_ids(self):
+        async with self.sessionmaker() as session:
+            count_query = (
+                select(func.count(func.distinct(ProductMatch.first_product_id)))
+            )
+            result = await session.execute(count_query)
+            unique_count = result.scalar()
+            return unique_count
+
+    async def select_unique_first_product_ids(self):
+        async with self.sessionmaker() as session:
+            # Запрос для получения уникальных значений first_product_id
+            unique_query = (
+                select(func.distinct(ProductMatch.first_product_id))
+            )
+            result = await session.execute(unique_query)
+            unique_ids = result.scalars().all()
+            return unique_ids

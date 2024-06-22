@@ -1,3 +1,4 @@
+import datetime
 import logging
 import time
 
@@ -19,7 +20,7 @@ class ProductMatcher:
         nltk.download('wordnet')
         self.orm = orm
         self.custom_stop_words = {'select', 'arbuz'}
-        self.threshold = 0.8
+        self.threshold = 0.6
 
     async def fetch_products(self, site_id):
         return await self.orm.product_repo.select_site_products(site_id)

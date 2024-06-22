@@ -1,43 +1,59 @@
+import hashlib
+
 import requests
 from PIL import Image
 from io import BytesIO
+import math
 
 
-def resize_image(image, target_height):
-    # Рассчитываем соотношение сторон
-    aspect_ratio = image.width / image.height
-    # Вычисляем новую ширину, сохраняя соотношение сторон
-    new_width = int(target_height * aspect_ratio)
-    # Изменяем размер изображения
-    resized_image = image.resize((new_width, target_height))
-    return resized_image
+def resize_image(image, target_size):
+    # Изменяем размер изображения, сохраняя соотношение сторон
+    image.thumbnail((target_size, target_size))
+    return image
 
 
-def merge_images_horizontally(url1, url2, output_path):
-    if "Нет изображения" != url1:
-        response1 = requests.get(url1)
-        image1 = Image.open(BytesIO(response1.content))
-    else:
-        image1 = Image.open("D:\\PROJECTS\\shoparsers\\temp\\default.png")  # todo
-    if "Нет изображения" != url2:
-        response2 = requests.get(url2)
-        image2 = Image.open(BytesIO(response2.content))
-    else:
-        image2 = Image.open("D:\\PROJECTS\\shoparsers\\temp\\default.png")  # todo
-    target_height = min(image1.height, image2.height)
-    image1_resized = resize_image(image1, target_height)
-    image2_resized = resize_image(image2, target_height)
-    width1, height1 = image1_resized.size
-    width2, height2 = image2_resized.size
-    total_width = width1 + width2
-    new_image = Image.new('RGB', (total_width, target_height), (255, 255, 255))
-    new_image.paste(image1_resized, (0, 0))
-    new_image.paste(image2_resized, (width1, 0))
+def merge_images_square(urls):
+    images = []
+    filename = ""
+    # Загрузка изображений
+    for url in urls:
+        if "Нет изображения" != url:
+            filename += url
+            response = requests.get(url)
+            image = Image.open(BytesIO(response.content))
+        else:
+            image = Image.open("D:\\PROJECTS\\shoparsers\\temp\\default.png")  # todo заменить на путь из .env
+        images.append(image)
 
-    path = "D:\\PROJECTS\\shoparsers\\temp\\" + output_path + ".jpg"
+    # Определение целевого размера (минимальный размер среди всех изображений)
+    target_size = min(min(image.size) for image in images)
+
+    # Изменение размера всех изображений до целевого размера
+    resized_images = [resize_image(image, target_size) for image in images]
+
+    # Вычисление размера коллажа
+    num_images = len(resized_images)
+    collage_size = math.ceil(math.sqrt(num_images)) * target_size
+
+    # Создание нового изображения с белым фоном
+    new_image = Image.new('RGB', (collage_size, collage_size), (255, 255, 255))
+
+    # Вставка каждого изображения в новый холст
+    current_x = 0
+    current_y = 0
+    for i, image in enumerate(resized_images):
+        new_image.paste(image, (current_x, current_y))
+        current_x += target_size
+        if current_x >= collage_size:
+            current_x = 0
+            current_y += target_size
+
+    # Сохранение нового изображения
+    hash_filename = hashlib.md5(filename.encode()).hexdigest()
+    path = "D:\\PROJECTS\\shoparsers\\temp\\" + hash_filename + ".jpg"
     new_image.save(path)  # todo заменить на путь из .env
     return path
 
-
 # Пример использования
-# merge_images_horizontally('https://example.com/image1.jpg', 'https://example.com/image2.jpg', 'merged_image.jpg')
+# urls = ['https://example.com/image1.jpg', 'https://example.com/image2.jpg', 'https://example.com/image3.jpg']
+# merge_images_square(urls, 'merged_image')

@@ -5,6 +5,7 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKe
 
 from database.database import ORM
 from database.models import Category, GeneralCategory
+from tgbot.handlers.states import AuthState
 from tgbot.keyboards.callbacks import CategoryCallback
 from tgbot.keyboards.home import generate_category_markup
 from tgbot.keyboards.keyboards import Keyboard
@@ -26,5 +27,6 @@ async def cmd_start(message: Message, state: FSMContext, orm: ORM, keyboard: Key
                                        keyboard=[[
                                            KeyboardButton(text='Поделиться номером телефона', request_contact=True)
                                        ]])
+        await state.set_state(AuthState.wait_contact)
         await message.answer("Для продолжения работы с ботом, поделитесь вашим номером телефона по кнопке ниже. 🔽",
                              reply_markup=keyboard)

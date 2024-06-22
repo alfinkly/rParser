@@ -5,8 +5,10 @@ from aiogram.types import CallbackQuery, Message
 
 from database.database import ORM
 from database.models import User
-from tgbot.handlers.states import ProductSearch
+from tgbot.handlers.home import cmd_start
+from tgbot.handlers.states import ProductSearch, AuthState
 from tgbot.keyboards.home import generate_category_markup
+from tgbot.keyboards.keyboards import Keyboard
 
 router = Router()
 
@@ -18,11 +20,8 @@ router = Router()
 #     await callback.message.delete()
 
 
-@router.message(F.contact)
-async def contact_received(message: Message, state: FSMContext, orm: ORM):
+@router.message(F.contact, AuthState.wait_contact)
+async def contact_received(message: Message, state: FSMContext, orm: ORM, keyboard: Keyboard):
     await orm.user_repo.insert_or_update(message)
     await message.answer("Спасибо за предоставленную информацию!")
-
-    markup = await generate_category_markup(orm)
-    await message.answer("Соответствия:", reply_markup=markup)
-    await state.set_state(ProductSearch.choosing_category)
+    await cmd_start(message, state, orm, keyboard)

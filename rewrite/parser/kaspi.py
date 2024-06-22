@@ -41,6 +41,7 @@ class KaspiParser(Parser):
     async def parse(self):
         logging.info(colored("kaspi parser started", "cyan"))
         while True:
+            start = datetime.datetime.now()
             urls = await self.orm.url_repo.select_urls(3)
             for url in urls:
                 counter = 1
@@ -61,5 +62,7 @@ class KaspiParser(Parser):
 
                     await self._parse_cards(cards, category_name)
                     counter += 1
-
+            end = datetime.datetime.now()
+            delta = end - start
+            print("\n" * 20 + "kaspi delta --- " + str(delta))
             time.sleep(self.orm.settings.timer)
