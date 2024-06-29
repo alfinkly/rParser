@@ -1,7 +1,4 @@
-import datetime
-import logging
 import time
-
 import nltk
 import numpy as np
 import pandas as pd
@@ -20,7 +17,7 @@ class ProductMatcher:
         nltk.download('wordnet')
         self.orm = orm
         self.custom_stop_words = {}
-        self.threshold = 0.4
+        self.threshold = 0.5
 
     async def fetch_products(self, site_id):
         return await self.orm.product_repo.select_site_products(site_id)
@@ -41,24 +38,27 @@ class ProductMatcher:
         merged_data['product_norm'] = merged_data['product'].apply(self.normalize_string)
         return merged_data
 
-    def find_similarities(self, merged_data):
+    @staticmethod
+    def find_similarities(merged_data):
         vectorizer = TfidfVectorizer().fit_transform(merged_data['product_norm'])
         cosine_similarities = cosine_similarity(vectorizer)
-        matches = np.argwhere(cosine_similarities > self.threshold)
-        return matches
+        return cosine_similarities
 
-    @staticmethod
-    def create_result_df(merged_data, matches):
-        result = pd.DataFrame(matches, columns=['idx_x', 'idx_y'])
-        result = result[result['idx_x'] != result['idx_y']].drop_duplicates()
-
-        result['id_x'] = result['idx_x'].apply(lambda x: merged_data.iloc[x]['id'])
-        result['id_y'] = result['idx_y'].apply(lambda x: merged_data.iloc[x]['id'])
-        result['site_id_x'] = result['idx_x'].apply(lambda x: merged_data.iloc[x]['site_id'])
-        result['site_id_y'] = result['idx_y'].apply(lambda x: merged_data.iloc[x]['site_id'])
-
-        result = result[result['site_id_x'] != result['site_id_y']]
-        return result[['id_x', 'id_y']]
+    def create_result_df(self, merged_data, similarities):
+        results = []
+        for idx, row in merged_data.iterrows():
+            site_ids_seen = set()
+            similarities_for_idx = similarities[idx]
+            similar_products = np.argsort(similarities_for_idx)[::-1]
+            for similar_idx in similar_products:
+                if similarities_for_idx[similar_idx] > self.threshold and merged_data.iloc[similar_idx]['site_id'] != \
+                        row['site_id']:
+                    similar_site_id = merged_data.iloc[similar_idx]['site_id']
+                    if similar_site_id not in site_ids_seen:
+                        site_ids_seen.add(similar_site_id)
+                        results.append((row['id'], merged_data.iloc[similar_idx]['id']))
+        result_df = pd.DataFrame(results, columns=['id_x', 'id_y'])
+        return result_df
 
     @staticmethod
     def save_matches_to_file(result, merged_data, file_path='matched_products.txt'):
@@ -70,25 +70,16 @@ class ProductMatcher:
                 f.write(f"Product 1: {product_x} (ID: {id_x}) - Product 2: {product_y} (ID: {id_y})\n")
 
     async def find_matches_products(self):
-        # Получаем список всех продуктов из репозитория базы данных.
         products: list[Product] = await self.orm.product_repo.select_all()
-        # Создаем DataFrame из списка продуктов, включая их идентификаторы, названия и идентификаторы сайтов.
         df_site = pd.DataFrame([(p.id, p.name, p.category.site_id) for p in products],
                                columns=['id', 'product', 'site_id'])
-        # Объединяем данные в один DataFrame (в данном случае только один сайт).
-        merged_data = pd.concat([df_site])
-        # Пред обрабатываем продукты, нормализуя строки.
-        merged_data = self.preprocess_products(merged_data)
-        # Находим сходства между продуктами на основе косинусного сходства.
-        matches = self.find_similarities(merged_data)
-        # Создаем DataFrame с результатами совпадений.
-        result = self.create_result_df(merged_data, matches)
-        # Сохраняем результаты совпадений в файл.
+        merged_data = self.preprocess_products(df_site)
+        similarities = self.find_similarities(merged_data)
+        result = self.create_result_df(merged_data, similarities)
         self.save_matches_to_file(result, merged_data)
-        # Обновляем или вставляем данные о совпадениях в репозиторий базы данных.
         await self.orm.general_product_repo.insert_or_update_general_products(result)
 
-    def loop_general_product(self):
+    async def loop_general_product(self):
         while True:
-            self.find_matches_products()
+            await self.find_matches_products()
             time.sleep(self.orm.settings.timer)

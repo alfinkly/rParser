@@ -9,7 +9,7 @@ class Keyboard:
     def home():
         markup = InlineKeyboardMarkup(inline_keyboard=[[
             InlineKeyboardButton(text="Все категории", callback_data=HomeCallback(action="category").pack()),
-            InlineKeyboardButton(text="Соответствия по товарам", callback_data=HomeCallback(action="matches").pack()),
+            InlineKeyboardButton(text="Найти товар", switch_inline_query_current_chat="")
         ]])
         return markup
 
@@ -41,13 +41,31 @@ class Keyboard:
         return markup
 
     @staticmethod
-    def product_match(product_id):
-        return InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚫",
-                                  callback_data=ProductCallback(action="not_match", id=product_id).pack())],
-            [InlineKeyboardButton(text="⬅️",
-                                  callback_data=ProductCallback(action="prev", id=product_id).pack()),
-             InlineKeyboardButton(text="➡️",
-                                  callback_data=ProductCallback(action="next", id=product_id).pack())
-             ]
+    def product_match(product_id, is_favorite: bool):
+        markup = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="⬅️ Предыдущий",
+                                     callback_data=ProductCallback(action="prev", id=product_id).pack()),
+                InlineKeyboardButton(text="Следующий ➡️",
+                                     callback_data=ProductCallback(action="next", id=product_id).pack())
+            ],
+            [
+                InlineKeyboardButton(text="Тут ошибка 🚫",
+                                     callback_data=ProductCallback(action="not_match", id=product_id).pack())
+            ],
         ])
+        if is_favorite:
+            markup.inline_keyboard.append([
+                InlineKeyboardButton(text="Убрать из избранных ❤️",
+                                     callback_data=ProductCallback(action="favorite", id=product_id).pack())
+            ])
+        else:
+            markup.inline_keyboard.append([
+                InlineKeyboardButton(text="Добавить в избранные 💔",
+                                     callback_data=ProductCallback(action="favorite", id=product_id).pack())
+            ])
+        markup.inline_keyboard.append([
+                InlineKeyboardButton(text="Избранные 💟",
+                                     callback_data=ProductCallback(action="favorites", id=product_id).pack())
+            ],)
+        return markup

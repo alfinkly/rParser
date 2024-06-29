@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardMarkup
 
 from database.database import ORM
 from tgbot.handlers.home import cmd_start
@@ -13,5 +13,5 @@ router = Router()
 @router.message(F.contact, AuthState.wait_contact)
 async def contact_received(message: Message, state: FSMContext, orm: ORM, keyboard: Keyboard):
     await orm.user_repo.insert_or_update(message)
-    await message.answer("Спасибо за предоставленную информацию!")
+    await message.answer("Спасибо за предоставленную информацию!", reply_markup=ReplyKeyboardMarkup(keyboard=[[]]))
     await cmd_start(message, state, orm, keyboard)

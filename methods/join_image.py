@@ -51,7 +51,7 @@ def merge_images_square(urls):
 
     # Сохранение нового изображения
     hash_filename = hashlib.md5(filename.encode()).hexdigest()
-    path = "D:\\PROJECTS\\rParser\\temp" + hash_filename + ".jpg"
+    path = "D:\\PROJECTS\\rParser\\temp\\" + hash_filename + ".jpg"
     new_image.save(path)  # todo заменить на путь из .env
     return path
 

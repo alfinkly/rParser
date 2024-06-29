@@ -20,8 +20,8 @@ class Text:
     def build_general_product_text(products: list[Product]):
         text = ""
         for num, p in enumerate(products):
-            text += f"\n<b>{p.name}</b>\nЦена: {p.price}\n" \
-                    f"<a href='{p.link}'>Ссылка на товар в {p.category.site.name}</a>\n"
+            text += f"\n<b>{p.category.site.name.capitalize()}:" \
+                    f"\n<a href='{p.link}'>{p.name}</a></b> — {p.price}\n"
             if num < len(products) - 1:
                 text += f"↕️"
         return text
