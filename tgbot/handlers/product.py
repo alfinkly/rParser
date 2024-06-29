@@ -166,5 +166,4 @@ async def add_to_cart(callback: CallbackQuery,
         favorites.append(category_products[current_index])
         await callback.message.edit_reply_markup(reply_markup=keyboard.product_match(current_index, is_favorite=True))
     await state.update_data({"favorites": favorites})
-
     await callback.answer()
