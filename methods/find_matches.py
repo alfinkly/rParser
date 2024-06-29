@@ -19,8 +19,8 @@ class ProductMatcher:
         nltk.download('stopwords')
         nltk.download('wordnet')
         self.orm = orm
-        self.custom_stop_words = {'select', 'arbuz'}
-        self.threshold = 0.6
+        self.custom_stop_words = {}
+        self.threshold = 0.4
 
     async def fetch_products(self, site_id):
         return await self.orm.product_repo.select_site_products(site_id)
@@ -86,9 +86,9 @@ class ProductMatcher:
         # Сохраняем результаты совпадений в файл.
         self.save_matches_to_file(result, merged_data)
         # Обновляем или вставляем данные о совпадениях в репозиторий базы данных.
-        await self.orm.product_match_repo.insert_or_update_products_match(result)
+        await self.orm.general_product_repo.insert_or_update_general_products(result)
 
-    def loop_product_match(self):
+    def loop_general_product(self):
         while True:
             self.find_matches_products()
             time.sleep(self.orm.settings.timer)

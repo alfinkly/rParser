@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from database.repo.category import CategoryRepo, GeneralCategoryRepo
 from database.config import EnvSettings
 from database.models import Base
-from database.repo.product import ProductRepo, ProductMatchRepo
+from database.repo.product import ProductRepo, GeneralProductRepo
 from database.repo.site import UrlRepo
 from database.repo.user import UserRepo
 
@@ -17,7 +17,7 @@ class ORM:
         self.product_repo: ProductRepo = None
         self.user_repo: UserRepo = None
         self.general_category_repo: GeneralCategoryRepo = None
-        self.product_match_repo: ProductMatchRepo = None
+        self.general_product_repo: GeneralProductRepo = None
 
     async def get_async_engine(self, echo=False):
         async_engine = create_async_engine(
@@ -49,4 +49,4 @@ class ORM:
         self.product_repo = ProductRepo(sessionmaker)
         self.user_repo = UserRepo(sessionmaker)
         self.general_category_repo = GeneralCategoryRepo(sessionmaker)
-        self.product_match_repo = ProductMatchRepo(sessionmaker)
+        self.general_product_repo = GeneralProductRepo(sessionmaker)

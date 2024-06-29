@@ -57,3 +57,14 @@ class GeneralCategoryRepo(Repo):
             result = await session.execute(query)
             g_categories = result.scalars().one()
             return g_categories
+
+    async def select_by_general_category_id(self, id):
+        async with self.sessionmaker() as session:
+            query = (
+                select(GeneralCategory)
+                .filter_by(id=id)
+                .options(selectinload(GeneralCategory.categories).selectinload(Category.products))
+            )
+            result = await session.execute(query)
+            g_categories = result.scalars().one()
+            return g_categories

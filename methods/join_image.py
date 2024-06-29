@@ -1,4 +1,5 @@
 import hashlib
+import os
 
 import requests
 from PIL import Image
@@ -22,7 +23,7 @@ def merge_images_square(urls):
             response = requests.get(url)
             image = Image.open(BytesIO(response.content))
         else:
-            image = Image.open("D:\\PROJECTS\\shoparsers\\temp\\default.png")  # todo заменить на путь из .env
+            image = Image.open("D:\\PROJECTS\\rParser\\temp\\default.png")  # todo заменить на путь из .env
         images.append(image)
 
     # Определение целевого размера (минимальный размер среди всех изображений)
@@ -50,7 +51,7 @@ def merge_images_square(urls):
 
     # Сохранение нового изображения
     hash_filename = hashlib.md5(filename.encode()).hexdigest()
-    path = "D:\\PROJECTS\\shoparsers\\temp\\" + hash_filename + ".jpg"
+    path = "D:\\PROJECTS\\rParser\\temp" + hash_filename + ".jpg"
     new_image.save(path)  # todo заменить на путь из .env
     return path
 

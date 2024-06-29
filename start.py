@@ -44,9 +44,9 @@ async def start():
             arbuz_parser = ArbuzParser(orm)
             tasks.append(asyncio.create_task(arbuz_parser.parse()))
     if args.find_matches:
-        product_matcher = ProductMatcher(orm)
-        tasks.append(asyncio.create_task(product_matcher.find_matches_products()))
-        # tasks.append(asyncio.create_task(product_matcher.loop_product_match()))
+        general_producter = ProductMatcher(orm)
+        tasks.append(asyncio.create_task(general_producter.find_matches_products()))
+        # tasks.append(asyncio.create_task(general_producter.loop_general_product()))
 
     logging.info(f"{tasks=}")
     await asyncio.gather(*tasks)

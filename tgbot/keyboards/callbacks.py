@@ -12,6 +12,7 @@ class AuthCallback(CallbackData, prefix="auth"):
 
 class ProductCallback(CallbackData, prefix="product"):
     action: str
+    id: int
 
 
 class ProductMatchCallback(CallbackData, prefix="pm"):

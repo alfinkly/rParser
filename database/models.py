@@ -97,10 +97,23 @@ class User(Base):
     updated_at: Mapped[updated_at_pk]
 
 
-class ProductMatch(Base):
-    __tablename__ = "product_match"
+class GeneralProduct(Base):
+    __tablename__ = "general_product"
 
-    id: Mapped[intpk]
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, unique=True)
     first_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
     second_product_id: Mapped[int] = mapped_column(ForeignKey("product.id", ondelete="CASCADE"), primary_key=True)
-    is_match: Mapped[bool] = mapped_column(nullable=True)
+
+    first_product = relationship("Product", foreign_keys=[first_product_id])
+    second_product = relationship("Product", foreign_keys=[second_product_id])
+
+
+class MatchClickCounter(Base):
+    __tablename__ = "match_click_counter"
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+    is_match: Mapped[bool]
+    general_product_id: Mapped[int] = mapped_column(ForeignKey("general_product.id", ondelete="CASCADE"),
+                                                    primary_key=True)
+    

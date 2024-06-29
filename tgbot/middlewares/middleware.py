@@ -4,11 +4,11 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
 from database.database import ORM
-from methods.text_builder import TextBuilder
-from tgbot.keyboards.keyboards import Keyboard
+from tgbot.middlewares.keyboards import Keyboard
+from tgbot.middlewares.texts import Text
 
 
-class ORMMiddleware(BaseMiddleware):
+class MainMiddleware(BaseMiddleware):
     def __init__(self, orm: ORM):
         self.orm = orm
 
@@ -20,6 +20,6 @@ class ORMMiddleware(BaseMiddleware):
     ) -> Any:
         data["orm"] = self.orm
         data["keyboard"] = Keyboard()
-        data["text_builder"] = TextBuilder()
+        data["texts"] = Text()
         result = await handler(event, data)
         return result

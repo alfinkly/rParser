@@ -2,7 +2,7 @@ from sqlalchemy import select, insert, update, func
 from sqlalchemy.orm import selectinload
 
 from database.repo.repo import Repo
-from database.models import Product, Category, Site, ProductMatch
+from database.models import Product, Category, Site, GeneralProduct, GeneralCategory, GeneralCategoryCategory
 
 
 class ProductRepo(Repo):
@@ -84,22 +84,22 @@ class ProductRepo(Repo):
             return products
 
 
-class ProductMatchRepo(Repo):
-    async def insert_or_update_products_match(self, products):
+class GeneralProductRepo(Repo):
+    async def insert_or_update_general_products(self, products):
         async with self.sessionmaker() as session:
             unique_pairs = set()
             for index, row in products.iterrows():
                 id_x, id_y = row['id_x'], row['id_y']
                 unique_pairs.add((id_x, id_y))
 
-            stmt = select(ProductMatch)
+            stmt = select(GeneralProduct)
             result = await session.execute(stmt)
             products_match = result.scalars().all()
             products_match = [(pm.first_product_id, pm.second_product_id) for pm in products_match]
             for id_x, id_y in unique_pairs:
                 if (id_x, id_y) not in products_match:
                     query = (
-                        insert(ProductMatch)
+                        insert(GeneralProduct)
                         .values(first_product_id=id_x, second_product_id=id_y)
                     )
                     await session.execute(query)
@@ -107,7 +107,7 @@ class ProductMatchRepo(Repo):
 
     async def select_all(self):
         async with self.sessionmaker() as session:
-            query = select(ProductMatch)
+            query = select(GeneralProduct)
             result = await session.execute(query)
             products_match = result.scalars().all()
             return products_match
@@ -115,12 +115,12 @@ class ProductMatchRepo(Repo):
     async def select_by_id(self, id: int):
         async with self.sessionmaker() as session:
             query = (
-                select(ProductMatch)
+                select(GeneralProduct)
                 .filter_by(id=id)
             )
             result = await session.execute(query)
-            product_match = result.scalars().one()
-            return product_match
+            general_product = result.scalars().one()
+            return general_product
 
     async def select_by_first_product_id(self, first_product_id: int):
         async with self.sessionmaker() as session:
@@ -134,7 +134,7 @@ class ProductMatchRepo(Repo):
             products.append(result.scalars().one())
 
             query = (
-                select(ProductMatch)
+                select(GeneralProduct)
                 .filter_by(first_product_id=first_product_id)
             )
             result = await session.execute(query)
@@ -153,18 +153,33 @@ class ProductMatchRepo(Repo):
     async def count_unique_first_product_ids(self):
         async with self.sessionmaker() as session:
             count_query = (
-                select(func.count(func.distinct(ProductMatch.first_product_id)))
+                select(func.count(func.distinct(GeneralProduct.first_product_id)))
             )
             result = await session.execute(count_query)
             unique_count = result.scalar()
             return unique_count
 
-    async def select_unique_first_product_ids(self):
+    async def select_by_general_category_id(self, id):
         async with self.sessionmaker() as session:
-            # Запрос для получения уникальных значений first_product_id
-            unique_query = (
-                select(func.distinct(ProductMatch.first_product_id))
+            query = (
+                select(Category.id)
+                .join(GeneralCategoryCategory)
+                .filter(GeneralCategoryCategory.general_category_id == id)
             )
-            result = await session.execute(unique_query)
-            unique_ids = result.scalars().all()
-            return unique_ids
+            categories = (await session.execute(query)).scalars().all()
+
+            query = (
+                select(Product.id)
+                .filter(Product.category_id.in_(categories))
+            )
+            products = (await session.execute(query)).scalars().all()
+
+            query = (
+                select(GeneralProduct)
+                .filter(
+                    (GeneralProduct.first_product_id.in_(products)) |
+                    (GeneralProduct.second_product_id.in_(products))
+                )
+            )
+            general_products = (await session.execute(query)).scalars().all()
+            return general_products
