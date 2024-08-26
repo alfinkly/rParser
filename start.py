@@ -12,7 +12,7 @@ from parser.kaspi import KaspiParser
 from methods.find_matches import ProductMatcher
 from tgbot.bot import run_tgbot
 
-print("\n"*2 + colored(figlet_format('by alfinkly', font='thin', width=200), 'magenta') + "\n"*4)
+print("\n"*2 + colored(figlet_format('dokuzu sama', font='thin', width=200), 'magenta') + "\n"*4)
 
 orm = ORM()
 logging.basicConfig(level=orm.settings.logging_level)
@@ -30,7 +30,7 @@ async def start():
     tasks = []
 
     if args.recreate_db:
-        orm.recreate_tables()
+        await orm.recreate_tables()
     if args.tgbot:
         tasks.append(asyncio.create_task(run_tgbot(orm)))
     if args.parsers:

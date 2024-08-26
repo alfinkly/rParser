@@ -5,14 +5,16 @@ from database.repo.category import CategoryRepo, GeneralCategoryRepo
 from database.config import EnvSettings
 from database.models import Base
 from database.repo.product import ProductRepo, GeneralProductRepo
-from database.repo.site import UrlRepo
+from database.repo.url import UrlRepo
 from database.repo.user import UserRepo
+from database.repo.site import SiteRepo
 
 
 class ORM:
     def __init__(self):
         self.settings = EnvSettings()
         self.url_repo: UrlRepo = None
+        self.site_repo: SiteRepo = None
         self.category_repo: CategoryRepo = None
         self.product_repo: ProductRepo = None
         self.user_repo: UserRepo = None
@@ -33,10 +35,13 @@ class ORM:
         )
         return async_engine
 
-    def recreate_tables(self):
+    async def recreate_tables(self):
         engine = self.get_engine()
         Base.metadata.drop_all(engine)
         Base.metadata.create_all(engine)
+
+        await self.site_repo.start_fill()
+
         engine.echo = True
 
     async def get_async_sessionmaker(self) -> async_sessionmaker:
@@ -45,6 +50,7 @@ class ORM:
     async def create_repos(self):
         sessionmaker = await self.get_async_sessionmaker()
         self.url_repo = UrlRepo(sessionmaker)
+        self.site_repo = SiteRepo(sessionmaker)
         self.category_repo = CategoryRepo(sessionmaker)
         self.product_repo = ProductRepo(sessionmaker)
         self.user_repo = UserRepo(sessionmaker)
